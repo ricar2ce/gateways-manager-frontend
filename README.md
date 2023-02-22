@@ -1,6 +1,8 @@
 # Gateways Manager Frontend (gateways-manager-front)
 
-Frontend to Manage a Gateways - Devices
+![repository-open-graph.png](src%2Fassets%2Frepository-open-graph.png)
+
+Frontend application to manage gateways and their associated devices
 
 ## Install the dependencies
 ```bash
