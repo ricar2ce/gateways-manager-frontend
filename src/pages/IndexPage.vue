@@ -95,7 +95,6 @@ const onRemove = async (row) => {
   }).onOk(() => {
     api.remove(`/gateways/${row.serialNumber}`)
       .then(async (res) => {
-        console.log('res on delete', res)
         if (!res?.success) throw new Error(res.statusText)
         await getGateways()
       })
