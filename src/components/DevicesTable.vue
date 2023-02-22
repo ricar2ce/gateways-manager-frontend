@@ -6,7 +6,8 @@
     row-key="uid"
     :loading="loading"
     @row-click="onSelect"
-    card-class="bg-grey-9"
+    card-class="bg-grey-10"
+    class="text-grey-1"
     :pagination="pagination"
     hide-pagination
     flat

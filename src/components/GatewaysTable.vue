@@ -1,13 +1,17 @@
 <template>
   <q-table
+    ref="table"
     title="Gateways"
     :rows="rows"
     :columns="columns"
     row-key="serialNumber"
     :pagination="pagination"
+    hide-pagination
     :loading="loading"
-    :rows-per-page-options="[5, 10, 15]"
     binary-state-sort
+    card-class="glass"
+    flat
+    card-style="border-radius: 10px;"
   >
     <template #top>
       <q-toolbar>
@@ -69,7 +73,7 @@
         >
           <span v-if="col.name==='actions'">
             <q-btn dense flat round color="primary" icon="las la-edit" @click="onEdit(props.row)">
-              <q-tooltip  anchor="center left" self="center right" :offset="[10, 10]">Click to edit gateway details</q-tooltip>
+              <q-tooltip  anchor="center left" self="center right" :offset="[10, 10]">Click to edit gateway</q-tooltip>
             </q-btn>
             <q-btn dense flat round color="negative" icon="las la-trash-alt" @click="onRemove(props.row)" >
               <q-tooltip  anchor="center left" self="center right" :offset="[10, 10]">Click to delete gateway</q-tooltip>
@@ -85,22 +89,13 @@
         </q-td>
       </q-tr>
     </template>
-
-    <template v-slot:body-cell-actions="props">
-      <q-td :props="props">
-        <q-btn dense flat round color="primary" icon="las la-edit" @click="onEdit(props.row)">
-          <q-tooltip  anchor="center left" self="center right" :offset="[10, 10]">Click to edit gateway details</q-tooltip>
-        </q-btn>
-        <q-btn dense flat round color="negative" icon="las la-trash-alt" @click="onRemove(props.row)" >
-          <q-tooltip  anchor="center left" self="center right" :offset="[10, 10]">Click to delete gateway</q-tooltip>
-        </q-btn>
-      </q-td>
-    </template>
   </q-table>
 </template>
 
 <script setup>
 import DevicesTable from "components/DevicesTable.vue";
+import CustomPagination from "components/CustomPagination.vue";
+import {ref} from "vue";
 
 const columns = [
   {
@@ -148,16 +143,6 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  pagination: {
-    type: Object,
-    default: () => ({
-      page: 1,
-      rowsPerPage: 5,
-      sortBy: 'id',
-      descending: false,
-      rowsNumber: 0
-    })
-  },
   loading: {
     type: Boolean,
     default: false
@@ -178,4 +163,22 @@ const props = defineProps({
     type: Function
   }
 })
+
+const table = ref(null)
+const pagination = ref({
+  sortBy: 'serialNumber',
+  descending: false,
+  page: 1,
+  rowsPerPage: 0,
+  rowsNumber: 0,
+})
+
+async function updateSort(sortBy) {
+  pagination.value =  {
+    ...pagination.value,
+    sortBy,
+    descending: !pagination.value.descending,
+  }
+  props.loadData()
+}
 </script>

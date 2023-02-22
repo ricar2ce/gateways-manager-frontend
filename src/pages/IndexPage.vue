@@ -14,7 +14,7 @@
     :auto-close="false"
     @hide="onHide"
   >
-    <q-card style="width: 700px; max-width: 60vw;">
+    <q-card style="width: 700px; max-width: 60vw;" class="glass">
       <q-toolbar>
         <q-toolbar-title><span class="text-weight-bold">{{ !selected ? 'Add New Gateway' : 'Edit' }} {{ selected?.name }}</span></q-toolbar-title>
         <q-btn flat round dense icon="close" v-close-popup/>

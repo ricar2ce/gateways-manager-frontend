@@ -3,7 +3,7 @@
     <q-header class="bg-transparent" height-hint="58">
       <AppHeader />
     </q-header>
-    <q-page-container >
+    <q-page-container class="bg-brand" >
       <q-page class="flex" >
         <div class="row full-width justify-center">
           <div class="col-8">
