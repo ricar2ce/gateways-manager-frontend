@@ -95,15 +95,12 @@ const onRemove = async (row) => {
   }).onOk(() => {
     api.remove(`/gateways/${row.serialNumber}`)
       .then(async (res) => {
-        if (res.status !== 200) throw new Error(res.statusText)
-        $q.notify({
-          message: 'Gateway deleted successfully',
-          color: 'positive',
-          position: 'bottom'
-        })
-        await loadData()
+        console.log('res on delete', res)
+        if (!res?.success) throw new Error(res.statusText)
+        await getGateways()
       })
       .catch((error) => {
+        console.error(error)
         $q.notify({
           message: error.message,
           color: 'negative',
