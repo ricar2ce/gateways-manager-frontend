@@ -1,94 +1,21 @@
 <template>
   <div class="row">
     <div class="col">
-      <DeviceForm :item="selected" :selected="selected!==null" @remove="removeDevice" @save="saveDevice" @unselect="unselect" />
+      <DeviceForm :selected="selected" :editing="selected!==null" @remove="removeDevice" @save="saveDevice" @unselect="unselect" />
     </div>
   </div>
   <div class="row">
     <div class="col">
-      <q-table
-        title="Devices"
-        :rows="internalValue"
-        :columns="columns"
-        row-key="uid"
-        :loading="loading"
-        @row-click="onSelect"
-        hide-pagination
-        flat
-      >
-        <template v-slot:body-cell-number="props">
-          <q-td :props="props">
-            {{props.rowIndex + 1}}
-          </q-td>
-        </template>
-        <template v-slot:body-cell-status="props">
-          <q-td :props="props">
-            <q-badge :color="props.row.status==='offline' ? 'negative' : 'positive'" text-color="white" :label="props.row.status" />
-          </q-td>
-        </template>
-      </q-table>
+      <DevicesTable :data="internalValue" @select="onSelect" :loading="loading" />
     </div>
   </div>
 </template>
 
 <script setup>
 import {ref, onBeforeMount, watch} from 'vue'
+import { useQuasar } from 'quasar'
 import DeviceForm from "components/DeviceForm.vue";
-
-/**
- * PROPS
- *         uid: {
- *           type: Number,
- *           required: true,
- *           unique: true,
- *         },
- *         vendor: {
- *           type: String,
- *           required: true,
- *         },
- *         dateCreated: {
- *           type: Date,
- *           required: true,
- *           default: Date.now,
- *         },
- *         status: {
- *           type: String,
- *           required: true,
- *           enum: ['online', 'offline'],
- *           default: 'offline',
- *         },
- */
-
-const columns = [
-  {
-    name: 'uid',
-    label: 'UID',
-    field: 'uid',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'vendor',
-    label: 'Vendor',
-    field: 'vendor',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'dateCreated',
-    label: 'Date Created',
-    field: 'dateCreated',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'status',
-    label: 'Status',
-    field: 'status',
-    align: 'left',
-    sortable: true
-  }
-]
+import DevicesTable from "components/DevicesTable.vue";
 
 const props = defineProps({
   modelValue: {
@@ -100,7 +27,7 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue"]);
 
-const rows = ref([])
+const $q = useQuasar()
 const loading = ref(false)
 const selected = ref(null)
 const internalValue = ref([]);
@@ -115,27 +42,50 @@ watch(()=>props.modelValue, (val)=>{
 });
 
 function onSelect (evt, select) {
-  console.log('select', select)
   selected.value = select
 }
 
-function saveDevice (device) {
-  if (device.uid) {
-    internalValue.value = internalValue.value.map(item => {
-      if (item.uid === device.uid) {
-        return device
-      }
-      return item
-    })
-  } else {
-    internalValue.value = [...internalValue.value, device]
+async function saveDevice (device) {
+  let newDevice = true
+  internalValue.value = internalValue.value.map(item => {
+    if (item.uid === device.uid) {
+      newDevice = false
+      return device
+    }
+    return item
+  })
+  if (newDevice){
+    if(internalValue.value.length < 10) {
+      device.dateCreated = new Date()
+      internalValue.value.push(device)
+    } else {
+      $q.notify({
+        message: 'Gateways can only have 10 devices',
+        color: 'negative',
+        position: 'bottom',
+        timeout: 2000
+      })
+    }
   }
   emit("update:modelValue", internalValue.value);
+  unselect()
 }
 
 function removeDevice (uid) {
-  internalValue.value = internalValue.value.filter(item => item.uid !== uid);
-  emit("update:modelValue", internalValue.value);
+  $q.dialog({
+    title: 'Confirm',
+    message: 'Are you sure you want to delete this device?',
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    internalValue.value = props.modelValue.filter(item => item.uid !== uid);
+  }).onOk(() => {
+    // console.log('>>>> second OK catcher')
+  }).onCancel(() => {
+    // console.log('>>>> Cancel')
+  }).onDismiss(() => {
+    unselect()
+  })
 }
 
 function unselect () {
@@ -146,7 +96,3 @@ onBeforeMount(() => {
   internalValue.value = props.modelValue;
 })
 </script>
-
-<style scoped>
-
-</style>

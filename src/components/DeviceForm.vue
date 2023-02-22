@@ -7,6 +7,20 @@
     <div class="row q-col-gutter-md">
       <div class="col">
         <q-input
+          v-model="device.uid"
+          label="UID"
+          filled
+          dense
+          lazy-rules
+          :rules="[
+            val => !!val || 'UID is required',
+            val => val.match(/^[0-9]*$/) || 'UID is a number only',
+          ]"
+          class="q-pb-none"
+        />
+      </div>
+      <div class="col">
+        <q-input
           v-model="device.vendor"
           label="Vendor"
           filled
@@ -56,9 +70,9 @@
           </template>
         </q-btn-toggle>
       </div>
-      <div class="col-3">
+      <div class="col text-right">
         <q-btn type="submit" color="primary" flat icon="las la-save" size="md" round />
-        <q-btn type="reset" color="primary" flat icon="las la-ban" size="md" :disable="!selected" round />
+        <q-btn ref="resetBtn" type="reset" color="primary" flat icon="las la-ban" size="md" round />
         <q-btn type="button" color="primary" flat icon="las la-trash" @click="onDelete" size="md" :disable="!selected" round />
       </div>
     </div>
@@ -69,32 +83,41 @@
 import {ref, watch} from "vue";
 
 const props = defineProps({
-  item: {
+  selected: {
     type: [Object, null] ,
     default: () => null
   },
-  selected: {
+  editing: {
     type: Boolean,
     default: false
   }
 })
 
 const emit = defineEmits(['save', 'remove', 'unselect'])
+const form = ref(null)
+const resetBtn = ref(null)
+const device = ref({})
 
-const device = ref({
-  vendor: '',
-  status: 'offline'
-})
+watch(
+  () => props.selected,
+  (val) => {
+    device.value = val ? val : {
+      uid: null,
+      vendor: '',
+      status: 'offline'
+    }
+  },
+  {immediate: true}
+)
 
-watch(() => props.item, (val) => {
-  device.value = val || {
+async function onSubmit() {
+  emit('save', device.value)
+  form.value.$el.reset()
+  device.value = {
+    uid: null,
     vendor: '',
     status: 'offline'
   }
-})
-
-function onSubmit() {
-  emit('save', device.value)
 }
 
 function onReset() {
@@ -102,6 +125,6 @@ function onReset() {
 }
 
 function onDelete() {
-  emit('remove', device.value)
+  emit('remove', device.value.uid)
 }
 </script>

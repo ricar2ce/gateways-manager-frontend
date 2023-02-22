@@ -62,32 +62,37 @@ const props = defineProps({
 })
 
 const onSubmit = async () => {
-  const { serialNumber, name, ipv4Address } = model.value
+  const { serialNumber, name, ipv4Address, peripheralDevices } = model.value
   const data = {
     serialNumber,
     name,
-    ipv4Address
+    ipv4Address,
+    peripheralDevices
   }
   if (props?.item?.serialNumber) {
     await api.put(`/gateways/${props.item.serialNumber}`, data)
       .then((res) => {
-        $q.notify({
-          message: 'Gateway updated successfully',
-          color: 'positive',
-          icon: 'las la-check-circle'
-        })
         emit('close')
+      })
+      .catch((err) => {
+        $q.notify({
+          message: `Error creating gateway: ${err}`,
+          color: 'negative',
+          icon: 'las la-exclamation-circle'
+        })
       })
   } else {
     await api.post('/gateways', data)
       .then((res) => {
-        $q.notify({
-          message: 'Gateway created successfully',
-          color: 'positive',
-          icon: 'las la-check-circle'
-        })
         emit('refresh')
         form.value.reset()
+      })
+      .catch((err) => {
+        $q.notify({
+          message: `Error creating gateway: ${err}`,
+          color: 'negative',
+          icon: 'las la-exclamation-circle'
+        })
       })
   }
 }

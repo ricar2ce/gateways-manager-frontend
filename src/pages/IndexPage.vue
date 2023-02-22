@@ -1,16 +1,12 @@
 <template>
-  <q-breadcrumbs class="q-mb-lg">
-    <q-breadcrumbs-el label="Gateways List" icon="las la-list-alt" />
-  </q-breadcrumbs>
   <GatewaysTable
     :rows="gateways"
-    :columns="columns"
     :pagination="pagination"
     :loading="loading"
+    :loadData="loadData"
     @create="onCreate"
-    @row-dblclick="onDblClick"
     @edit="onEdit"
-    @view="onView"
+    @remove="onRemove"
   />
 
   <q-dialog
@@ -42,42 +38,6 @@ import { useRouter} from "vue-router";
 import { useAPI } from "src/composables/useAPI";
 import GatewaysTable from "components/GatewaysTable.vue";
 import GatewayForm from "components/GatewayForm.vue";
-
-const columns = [
-  {
-    name: 'number',
-    label: 'No.',
-    align: 'left',
-    sortable: false
-  },
-  {
-    name: 'serialNumber',
-    label: 'Serial Number',
-    field: 'serialNumber',
-    align: 'left',
-  },
-  {
-    name: 'name',
-    label: 'Name',
-    field: 'name',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'ipv4Address',
-    label: 'IP',
-    field: 'ipv4Address',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'actions',
-    label: 'Actions',
-    field: 'actions',
-    align: 'right',
-    sortable: false
-  }
-]
 
 const $q = useQuasar()
 const api = useAPI()
@@ -125,21 +85,51 @@ const onEdit = (row) => {
   dialog.value = true
 }
 
-const onView = (row) => {
-  onDblClick(null, row)
+const onRemove = async (row) => {
+  loading.value = true
+  $q.dialog({
+    title: 'Confirm',
+    message: `Are you sure you want to delete  ${row.name}?`,
+    cancel: true,
+    persistent: true
+  }).onOk(() => {
+    api.remove(`/gateways/${row.serialNumber}`)
+      .then(async (res) => {
+        if (res.status !== 200) throw new Error(res.statusText)
+        $q.notify({
+          message: 'Gateway deleted successfully',
+          color: 'positive',
+          position: 'bottom'
+        })
+        await loadData()
+      })
+      .catch((error) => {
+        $q.notify({
+          message: error.message,
+          color: 'negative',
+          position: 'bottom'
+        })
+      })
+  }).onOk(() => {
+    // console.log('>>>> second OK catcher')
+  }).onCancel(() => {
+    // console.log('>>>> Cancel')
+  }).onDismiss(() => {
+    loading.value = false
+  })
 }
 
 async function getGateways() {
   loading.value = true
   await api.get('/gateways')
-    .then((data) => {
-      gateways.value = data
+    .then((res) => {
+      gateways.value = res.data
     })
     .catch((error) => {
       $q.notify({
         message: error.message,
         color: 'negative',
-        position: 'top'
+        position: 'bottom'
       })
     })
     .finally(() => {
